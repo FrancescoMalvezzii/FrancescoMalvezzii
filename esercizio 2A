@@ -1,0 +1,40 @@
+library(moments)
+# import file portate
+data <- read.table("exercise2a.txt", header= T)
+
+portata <- data$discharge
+portata
+
+# calcolo indici statistici
+
+# media campionaria
+n <- length(portata)
+sample_mean_portata <- sum(portata)/n
+sample_mean_portata
+
+# varianza non distorta
+sample_var_portata <-(1/(n-1))*sum((portata-sample_mean_portata)^2)
+sample_var_portata
+
+# dev std 
+sample_deviation_standard <- (sample_var_portata)^(1/2)
+
+install.packages("moments")
+
+# indice di asimmetria
+sample_skewness_portata <- skewness(portata)
+sample_skewness_portata
+
+#istogramma frequenze assolute
+h <- hist(portata, plot = T)
+
+# istogramma frequenze relative
+h$counts <- h$counts/n
+plot(h, ylim = c(0,1), main = 'Frequenze relative di portata')
+
+# istogramma frequenze cumulate
+h$counts <-cumsum(h$counts)
+plot(h, ylim = c(0,1), main = 'Frequenze cumulate di portata')
+
+# boxplot
+boxplot(portata, main= 'Boxplot')
