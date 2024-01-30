@@ -1,0 +1,152 @@
+# Esercizio 3
+
+rm(list = ls())
+library(moments)
+library(evd)
+library(goftest)
+library(stats)
+
+# Importazione i dati
+data <- read.table("Esercizio3.txt", header = T)
+Annual_maxima <- data$Annual_maxima
+
+n <- length(Annual_maxima)
+h <- hist(Annual_maxima, main = 'Istogramma pioggia')
+
+# Istogramma frequenze relative
+h$counts <- h$counts/n 
+h$xname <- "frequency"
+plot(h, ylim = c(0,1), main = 'Istogramma frequenze relative')
+
+media <- mean(Annual_maxima)
+varianza <- var(Annual_maxima)
+sample_var <- sqrt(varianza)
+
+x <- seq(min(Annual_maxima), max(Annual_maxima), 0.1)
+
+# DISTRIBUZIONE NORMALE PDF
+Fx_norm <- (1/(sample_var*sqrt(2*pi)))*exp((-0.5*((x-media)/sample_var)^2))
+plot(h, ylim = c(0,1), main = 'Funzioni di densità probabilistica (PDF)')
+lines(x,Fx_norm, col = 'darkgreen', lwd = 2)
+
+# DISTRIBUZIONE ESPONENZIALE PDF 
+lambda <- 1 / media
+lambda2 <- 1 / sample_var
+Fx <- lambda * exp(-lambda * x)
+lines(x, Fx, col = 'blue', lwd = 2)
+Fx <- lambda2 * exp(-lambda2 * x)
+lines(x, Fx, col = 'orange', lwd = 2)
+
+# DISTRIBUZIONE GUMBELL PDF
+alpha <- sqrt((sample_var*6)/pi^2)  
+b <- media - alpha*0.5772
+Fx <- (1/alpha)*exp(((-(x-b)/alpha)-exp(-(x-b)/alpha)))
+lines(x, Fx, col = 'red', lwd = 2)
+legend("topright", legend=c("Gumbel", "Normal", "Exponential 1", "Exponential 2"), 
+       col=c("red", "darkgreen", "blue", "orange"), lwd=c(2, 2, 2, 2), text.font=3, text.width = 0.8)
+
+# Istogramma frequenze relative cumulate
+h$counts  <- cumsum(h$counts)
+plot(h, ylim = c(0,1), main = 'Istogramma frequenze cumulate')
+
+# Boxplot
+boxplot(Annual_maxima, main = 'Boxplot', horizontal = T)
+
+# STATISTICA TEST -----------
+
+# Funzione di distribuzione empirica cumulata - ECDF
+xs <- sort(Annual_maxima)
+ordine <- seq(1, n, 1)
+pp_weibull <- 1/(n+1)*ordine
+
+plot(xs, pp_weibull, pch = 16, col='black', type = 's', main = 'Distribuzioni cumulate (CDF)')
+legend("bottomright", legend=c("pp weibull", "Gumbel", "Normal", "Exponential 1", "Exponential 2"), 
+       col=c("black","red", "darkgreen", "blue", "orange"), lwd=c(2, 2, 2, 2), text.font=3, text.width = 0.8)
+# CDF GUMBELL
+Fx_gumbel <- exp(-exp(-(x-b)/alpha))
+lines(x, Fx_gumbel, col = 'red', lty = 1, lwd = 2)
+
+# CDF NORMALE
+pvalues <- pnorm(x, mean = media, sd = sample_var)
+lines(x, pvalues, lwd = 2, col = 'darkgreen')
+
+# CDF ESPONENZIALE 1
+pvalues <- pexp(x, rate = lambda)
+lines(x, pvalues, col = 'blue', lwd = 1.5)
+
+# CDF ESPONENZIALE 2
+lambda2 <- 1/sample_var
+pvalues <- pexp(x, rate = lambda2)
+lines(x, pvalues, col = 'orange', lwd = 1.5)
+
+# TEST DEL CHI QUADRO
+#definisco numero delle classi
+l <- 2 * ( 2*(n-1)^2 / qnorm(0.95)^2 ) ^ 0.2 
+l <- round(l)
+print('Numero di classi per il test del chi quadro = ')
+l
+if (n/l > 5) {
+  print("Il numero di classi è corretto")  
+} 
+pr <- rep(1/l, l) 
+pr_cum <- cumsum(pr) 
+pr_cum <- pr_cum[1:(length(pr_cum)-1)] 
+
+## Distribuzione di Gumbell
+
+breaks_gum <- qgumbel(pr_cum, loc=b, scale=alpha) 
+E <- n*pr 
+breaks_gum <- c(-Inf, breaks_gum, Inf) 
+histogram_g <- hist(Annual_maxima, breaks=breaks_gum, plot=FALSE) 
+Obs_gum <- histogram_g$counts
+chis_gum <- sum((Obs_gum-E)^2/E)
+gdl <- l-2-1 #
+pvalue_gum <- 1-pchisq(chis_gum , gdl)  
+
+## Distribuzione Normale
+
+breaks_norm <- qnorm(pr_cum, mean=media, sd=sample_var)
+breaks_norm <- c(-Inf, breaks_norm, Inf)
+histogram_n <- hist(Annual_maxima, breaks=breaks_norm, plot=FALSE)
+Obs_norm <- histogram_n$counts
+chis_norm <- sum((Obs_norm-E)^2/E)
+gdl <- l-2-1
+pvalue_norm <- 1-pchisq(chis_norm , gdl)
+
+## Distribuzione Esponenziale 1
+
+breaks_exp1<- qexp(pr_cum, rate=lambda)
+breaks_exp1 <- c(-Inf, breaks_exp1, Inf)
+histogram_e1 <- hist(Annual_maxima, breaks=breaks_exp1, plot=FALSE)
+Obs_exp1 <- histogram_e1$counts
+chis_exp1 <- sum((Obs_exp1-E)^2/E)
+gdl <- l-1-1
+pvalue_exp1 <- 1-pchisq(chis_exp1 , gdl)
+
+# Distribvuzione esponenziale 2
+
+breaks_exp2<- qexp(pr_cum, rate=lambda2)
+breaks_exp2 <- c(-Inf, breaks_exp2, Inf)
+histogram_e2 <- hist(Annual_maxima, breaks=breaks_exp2, plot=FALSE)
+Obs_exp2 <- histogram_e2$counts
+chis_exp2 <- sum((Obs_exp2-E)^2/E)
+gdl <- l-1-1
+pvalue_exp2 <- 1-pchisq(chis_exp2 , gdl)
+
+pvalue_exp1
+pvalue_exp2
+pvalue_gum
+pvalue_norm
+
+
+##TEST KOLMOGOROV-SMIRNOV
+ks.test(Annual_maxima, y="pgumbel", loc=b, scale=alpha)
+ks.test(Annual_maxima, y="pnorm", mean=media, sd=sample_var)
+ks.test(Annual_maxima, y="pexp", rate=lambda)
+ks.test(Annual_maxima, y="pexp", rate=lambda2)
+
+##TEST ANDERSON-DARLING
+ad.test(Annual_maxima, null="pgumbel", loc=b ,scale=alpha)
+ad.test(Annual_maxima , null="pnorm", mean=media ,sd=sample_var)
+ad.test(Annual_maxima , null="pexp", rate=lambda)
+ad.test(Annual_maxima , null="pexp", rate=lambda2)
