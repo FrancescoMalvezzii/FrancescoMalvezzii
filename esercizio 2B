@@ -1,0 +1,34 @@
+# Esercizio 2B
+rm(list=ls())
+library(moments)
+library(car)
+
+# import file piogge
+
+data2 <- read.table("Exercise2b.txt", header = T, sep = "\t")
+duration <- c(5, 10, 20, 30, 40, 50, 60, 120, 180)
+for (i in 2:length(duration)+1) {
+  colnames(data2)[i] <- i
+}
+
+par <- matrix(NA, nrow = length(duration), ncol = 3)
+colnames(par) <- c("media", "varianza", "skewness")
+
+df <- data2[ ,2:10]
+
+media <- rep(0, length(duration))
+varianza <- rep(0,length(duration))
+skewness <- rep(0,length(duration))
+for (i in 1:length(duration)) {
+  x <- df[ ,i]
+  media[i] <- mean(x)
+  varianza[i] <- var(x)
+  skewness[i] <- skewness(x)
+  par[i,1] <- media[i]
+  par[i,2] <- varianza[i]
+  par[i,3] <- skewness[i]  
+}
+
+plot(duration, par[ ,1], ylab = "value", main = "Media", type = 'l', col = 'blue', lwd = 2)
+plot(duration, par[ ,2], ylab = "value", main = "Varianza", col = 'red', lwd = 2, type = 'l')
+plot(duration, par[ ,3], ylab = "value", main = "Coefficiente di Skewness", col = 'green', lwd = 2, type = 'l')
