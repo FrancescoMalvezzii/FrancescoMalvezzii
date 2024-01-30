@@ -1,0 +1,40 @@
+# Esercizio 1 
+
+# area bacino
+
+area <- 322.948
+
+# perimetro bacino
+
+perimetro <- 108.738
+
+#lunghezza asta principale
+
+L <- 31.882
+
+#valore medio pendenza
+
+avarage_slope <- 28.29141930591599
+
+#valore medio quota
+
+avarage_altitude <- 2196.406235594398
+
+#lunghezza reticolo idrografico
+
+Lt <- 184.915
+
+#Drainage density
+
+D <- (Lt/area)
+D
+
+#circularity ratio
+
+C <- (area)/((perimetro^2)/(4*pi))
+C
+
+#elongation ratio
+
+E <- (2*sqrt(area))/(L*sqrt(pi))
+E
