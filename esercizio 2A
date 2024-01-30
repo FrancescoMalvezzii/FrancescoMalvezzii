@@ -1,3 +1,4 @@
+# Esercizio 2A
 library(moments)
 # import file portate
 data <- read.table("exercise2a.txt", header= T)
