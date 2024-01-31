@@ -1,0 +1,66 @@
+#   Esercizio 5
+
+rm(list = ls())
+
+# Dati del bacino
+T <- 100 #anni #tempo di ritorno
+A <- 322.948 #km2
+L <- 31.882 #km
+i <- 53.8 #%
+CN2 <- 68
+CN3 <- round(CN2 / (0.43 + 0.0057 * CN2))
+
+# Parametri  laminazione
+a <- 1.017
+b <- 1.220
+
+# Parametri LSPP
+eps <- 0.7713
+alpha <- 0.3016
+k <- -0.14
+a1 <- 23.46 #mm / h
+n <- 0.3693
+
+# Metodo razionale 
+
+# Tempo di corrivazione 
+tc <- 1.67 * (L * 10^3 / 0.3048) ^ 0.8 * ((1000 / CN3) - 9) ^ 0.7 / (1900 * i ^ 0.5) #formula empirica
+
+# Inizializzazione ciclo for
+dc_all <- seq(0.1, 24, 0.01)
+diff <- 1000
+idx <- 1
+
+k <- -k
+
+while (abs(diff) >= 0.1) {
+  
+  dc <- dc_all[idx]
+  yt <- -log(log(T / (T - 1))) #variabile ridotta di gumbell
+  xt <- eps + alpha / k * (1-exp(-k * yt)) #quantile normalizzato GEV
+  r <- 1 - exp(-2.472 * A ^ -0.242 * dc^(0.6 - exp(-0.643 * A^0.235)))
+  hl <- xt * a1 * dc ^ n * r
+  
+  ic <- hl / dc #intensità di precipitazione netta
+  
+  S <- 254 * (100/CN3 -1)
+  Ia <- 0.2 * S #inibimento
+  
+  tf <- Ia / ic #tempo di ponding
+  diff <- dc - (tc + tf)
+  
+  idx <- idx + 1
+}
+
+
+
+hn <- (hl - Ia)^2 / (hl - Ia + S) #precipitazione netta
+
+phi <- hn / hl #coefficiente di deflusso
+
+t_lag <- tc / 1.67 #tempo di lag
+
+eps_laminazione <- 1 - exp(-a * (dc / t_lag) ^ b) #coefficiente di laminazione
+
+# Portata di piena
+Q <- phi * hl / dc * eps_laminazione * A / 3.6
