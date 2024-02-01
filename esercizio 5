@@ -39,9 +39,9 @@ while (abs(diff) >= 0.1) {
   yt <- -log(log(T / (T - 1))) #variabile ridotta di gumbell
   xt <- eps + alpha / k * (1-exp(-k * yt)) #quantile normalizzato GEV
   r <- 1 - exp(-2.472 * A ^ -0.242 * dc^(0.6 - exp(-0.643 * A^0.235)))
-  hl <- xt * a1 * dc ^ n * r
+  hl <- xt * a1 * dc ^ n * r  #precipitazione lorda
   
-  ic <- hl / dc #intensità di precipitazione netta
+  ic <- hl / dc #intensità di precipitazione lorda
   
   S <- 254 * (100/CN3 -1)
   Ia <- 0.2 * S #inibimento
